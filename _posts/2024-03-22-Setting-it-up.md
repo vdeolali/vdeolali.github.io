@@ -1,9 +1,9 @@
 ---
-title: "All Setup"
+title: "OCI Capacity Checker Utility"
 date: 2024-03-22
 ---
 
-# All Setup
+# OCI Capacity Checker Utility
 
 I wanted a quick way to answer a very specific OCI question: if I need a given compute shape in a given region, can I actually get capacity there right now?
 
