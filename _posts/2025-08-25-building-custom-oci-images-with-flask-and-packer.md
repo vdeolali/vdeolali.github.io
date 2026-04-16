@@ -1,6 +1,6 @@
 ---
 title: "Building Custom OCI Images with Flask and Packer"
-date: 2026-04-16
+date: 2025-08-25
 ---
 
 # Building Custom OCI Images with Flask and Packer
