@@ -1,0 +1,15 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vlan200-ovn-localnet
+  namespace: test-net
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "vlan200-ovn-localnet",
+    "type": "ovn-k8s-cni-overlay",
+    "topology": "localnet",
+    "physicalNetworkName": "vlan200-ovn-localnet",
+    "subnets": "10.115.16.0/20",
+    "netAttachDefName": "test-net/vlan200-ovn-localnet"
+  }'
