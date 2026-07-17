@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using xAI for Multi-Agent AI Workflows - Preview</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.7; 
+            max-width: 800px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+            color: #333;
+        }
+        h1 { font-size: 2.2em; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        h2 { margin-top: 2em; color: #111; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 6px; overflow-x: auto; }
+        .meta { color: #666; font-size: 0.9em; margin-bottom: 2em; }
+        blockquote { border-left: 4px solid #ddd; padding-left: 20px; color: #444; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="meta">
+        <strong>Using xAI for Multi-Agent AI Workflows</strong><br>
+        Posted: July 18, 2026
+    </div>
+
+    <h1>Using xAI for Multi-Agent AI Workflows</h1>
+
+    <p>After spending time with Kimi K3 (see the clean install post and the honest challenges), and now diving deep into <strong>Grok Build</strong> (the TUI you're reading this in), one thing has become clear: <strong>xAI has some of the best primitives for serious multi-agent work</strong> I've seen.</p>
+
+    <p>Codex, Claude, and most "single agent" tools are fantastic at orchestrating <em>one</em> capable agent. But when you need a <em>network</em> of specialized agents talking to each other, xAI gives you the knobs, the server-side orchestration, and the parallel execution capabilities that feel purpose-built for it.</p>
+
+    <h2>1. Native Multi-Agent Mode and Parallel Spawning</h2>
+    <p>xAI (particularly through Grok Build and the underlying agent SDK) makes it trivial to spawn multiple agents in parallel or sequence.</p>
+    <p>The subagent system lets you launch specialized agents with different roles, models, and capabilities. You can run them in isolation (using git worktrees) or share state.</p>
+    <p><strong>Use case that just works</strong>: A daily "access token refresh" agent that runs in the background, checks expiration, refreshes credentials across services, and notifies other agents. Spawning this in parallel with your main workflow is clean and doesn't block.</p>
+
+    <h2>2. Plan Mode as the Orchestrator</h2>
+    <p>One of my favorite features is <strong>Plan Mode</strong>.</p>
+    <p>It lets you declare high-level intent and have Grok break it down into a sequenced plan, then execute it — often by chaining multiple specialized agents.</p>
+
+    <pre><code>grok --plan "First, have a researcher agent analyze the SDK docs. Then, have a coder agent implement the client. Finally, have a tester agent write integration tests."</code></pre>
+
+    <p>This is genuinely useful. The planner decides the sequence, spawns the right subagents, and coordinates them. You can also use file-based handoffs or simple shell scripts to manage flow between agents.</p>
+
+    <h2>3. Server-Side Orchestration and Smart Tool Selection</h2>
+    <p>A big practical advantage is how much orchestration and tool selection happens server-side. This dramatically reduces the "tool flailing" I complained about with Kimi K3. The system is much better at deciding which agent or tool should handle the next step.</p>
+
+    <h2>4. Better Integration with Cursor</h2>
+    <p>The combination of <strong>xAI + Cursor</strong> is excellent. Grok Build feels like a natural extension of the Cursor workflow.</p>
+
+    <h2>Final Thoughts</h2>
+    <p>xAI doesn't market itself loudly as an AI tooling company. It's part of the SpaceX family — the brand is rockets, Starlink, and pushing the boundaries of physics and intelligence.</p>
+
+    <p>But quietly, the combination of <strong>xAI + Grok Build + Cursor</strong> is becoming one of the strongest setups for high-performance, multi-agent software engineering I've used.</p>
+
+    <p>As one very frustrated user put it while fighting with the TUI: "You are very good at difficult things, but suck at simple things."</p>
+
+    <p>If you're doing serious systems work — infrastructure, complex integrations, or anything that benefits from specialized agents working together — xAI deserves more attention than it gets.</p>
+
+    <p>It's not trying to be the loudest AI company. It's trying to be one of the most effective.</p>
+
+    <p>And on that metric, it's winning.</p>
+
+    <hr>
+    <p><em>This is a static HTML preview of the blog post. You can save this file and open it directly in any browser.</em></p>
+
+</body>
+</html>

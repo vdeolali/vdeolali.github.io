@@ -1,11 +1,11 @@
 ---
-title: "Installing Kimi Code & K3 for This Blog (The Clean Version)"
+title: "Kimi K3 on Windows 11 + WSL: The Honest Challenges"
 date: 2026-07-17
 ---
 
-# Installing Kimi Code and K3 to write this blog (The Clean Version)
+# Installing Kimi K3 on Windows 11 with WSL: The Honest Version
 
-I wrote a companion post about installing Kimi Code and using Kimi K3 to write this blog. That one was the clean, it-all-worked version. This is the other half: what it was actually like to get Kimi K3 running on **Windows 11 through WSL**, and the five things that made me grind my teeth along the way.
+I wrote a companion post about [installing Kimi Code and K3 to write this blog (The Clean Version)]({% post_url 2026-07-17-installing-kimi-code-k3-for-this-blog %}). That one was the clean, it-all-worked version. This is the other half: what it was actually like to get Kimi K3 running on **Windows 11 through WSL**, and the five things that made me grind my teeth along the way.
 
 None of these are dealbreakers. But if I had read them before I started, I would have saved myself a couple of hours and a chunk of context window I did not need to burn.
 
