@@ -43,9 +43,8 @@ hr {
   font-size: 2.5em;
   opacity: 0.3;
 }
-
-/* Site title */
+/* Site header title: bold and bigger */
 .site-title {
   font-weight: 700;
-  font-size: 2.2em;
+  font-size: 34px;
 }
