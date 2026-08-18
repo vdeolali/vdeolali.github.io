@@ -32,6 +32,6 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 
 **The rows.** The task is my own error-recovery idiom, the corpus and harness from [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}): given a situation (task, recent activity, the error), emit one tool call as JSON. 200 held-out cases, never trained on, never retrieved from. **A** is the raw 1.5B base model with no help - the null control. **B** is the same base model with the three most similar past fixes (from the 2,159-pair corpus) pasted into its context. **C** is the base model plus the LoRA adapter (rank 16, 74 MB) trained on those same 2,159 pairs. **D** is the stack: the trained model *and* the retrieved examples. B and C see the identical corpus on purpose - same knowledge, two delivery channels, no excuses about who had better data. The columns run strictest left to right: valid JSON (speaks the contract), right tool (knows the fix), exact arguments (a deliberately brutal bar - many phrasings are equally correct). Greedy decoding, so every number is reproducible digit-for-digit; per-condition noise is about +/-3.5 points at n=200.
 
-## The redundancy tax
+## Misleading intuition
 
 The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. **The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
