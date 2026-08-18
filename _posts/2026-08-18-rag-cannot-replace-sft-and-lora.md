@@ -11,7 +11,7 @@ date: 2026-08-18
 
 ## TL;DR
 
-A claim making the rounds says retrieval makes fine-tuning optional: skip the training, just stuff the prompt. I tested it on my own error-recovery task - the same 2,159 training pairs delivered two ways (baked into weights vs pasted into the prompt), 200 held-out cases, one exam. Three findings:
+A claim making the rounds says retrieval makes fine-tuning optional: skip the training, just stuff the context. I tested it on my own error-recovery task - the same 2,159 training pairs delivered two ways (baked into weights vs pasted into the context), 200 held-out cases, one exam. Three findings:
 
 - **Retrieval rescues a model that knows nothing.** The base model picks my tools at chance (1%); three pasted fixes take it to 61.5%. Sixty points of knowledge, zero training. RAG works.
 - **Training beats retrieval on identical knowledge.** 77.5% vs 61.5% - sixteen points, with cleaner output to boot (91% vs 77% valid JSON). RAG cannot replace SFT and LoRA.
@@ -30,15 +30,11 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 | C. base + LoRA | 91% | **77.5%** | 2.5% |
 | D. LoRA + RAG | 85.5% | **69.0%** | 1.5% |
 
-**The rows.** The task is my own error-recovery idiom, the corpus and harness from [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}): given a situation (task, recent activity, the error), emit one tool call as JSON. 200 held-out cases, never trained on, never retrieved from. **A** is the raw 1.5B base model with no help - the null control. **B** is the same base model with the three most similar past fixes (from the 2,159-pair corpus) pasted into its prompt. **C** is the base model plus the LoRA adapter (rank 16, 74 MB) trained on those same 2,159 pairs. **D** is the stack: the trained model *and* the retrieved examples. B and C see the identical corpus on purpose - same knowledge, two delivery channels, no excuses about who had better data. The columns run strictest left to right: valid JSON (speaks the contract), right tool (knows the fix), exact arguments (a deliberately brutal bar - many phrasings are equally correct). Greedy decoding, so every number is reproducible digit-for-digit; per-condition noise is about +/-3.5 points at n=200.
+**The rows.** The task is my own error-recovery idiom, the corpus and harness from [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}): given a situation (task, recent activity, the error), emit one tool call as JSON. 200 held-out cases, never trained on, never retrieved from. **A** is the raw 1.5B base model with no help - the null control. **B** is the same base model with the three most similar past fixes (from the 2,159-pair corpus) pasted into its context. **C** is the base model plus the LoRA adapter (rank 16, 74 MB) trained on those same 2,159 pairs. **D** is the stack: the trained model *and* the retrieved examples. B and C see the identical corpus on purpose - same knowledge, two delivery channels, no excuses about who had better data. The columns run strictest left to right: valid JSON (speaks the contract), right tool (knows the fix), exact arguments (a deliberately brutal bar - many phrasings are equally correct). Greedy decoding, so every number is reproducible digit-for-digit; per-condition noise is about +/-3.5 points at n=200.
 
 ## The redundancy tax
 
 The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism.
-
-Here is the deeper problem. The model has no way to mark part of the prompt as "for reference only." Everything in the context is treated as text to be continued. The pasted examples are not sitting on a shelf next to the question; they are part of the question, and they pull the answer toward themselves.
-
-There is a second problem. Models do not choose between competing signals - they average them. If the weights say one thing and the pasted examples say something slightly different, the output lands in between. And notice what the retriever does for a living: it was asked for the most similar cases in the corpus, so it returns exactly the examples most capable of pulling the answer in the wrong direction. When the information is new, that pull is the whole benefit: condition B gained sixty points because the examples dragged the answer toward the right region. When the information is already in the weights, the same pull has nothing to gain and still takes its toll: condition D lost 8.5 points. And the bill repeats on every call - training pays for knowledge once, while context charges for it on every prompt. That is the redundancy tax.
 
 **The rule: retrieval pays when it tells the model something new. It taxes when it repeats something known.**
 
