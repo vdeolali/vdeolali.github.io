@@ -5,7 +5,7 @@ date: 2026-08-18
 
 # RAG cannot replace SFT and LoRA
 
-*The redundancy tax: RAG gets worse with redundancy, and it adds to the cost of context too. Below are the numbers, the mechanism, and the one job retrieval gets to keep.*
+* RaG is only as good as the freshness of the data. Any redundancy in data and the LLM performance suffers. 
 
 ---
 
@@ -17,11 +17,11 @@ A claim making the rounds says retrieval makes fine-tuning optional: skip the tr
 - **Training beats retrieval on identical knowledge.** 77.5% vs 61.5% - sixteen points, with cleaner output to boot (91% vs 77% well-formed JSON). RAG cannot replace SFT and LoRA.
 - **Stacking is worse than either alone.** LoRA + RAG drops to 69%: the trained model loses 8.5 points of tool accuracy the moment retrieval is added. Worse answers, on more context. The redundancy tax is real.
 
-## Reigning Wisdom: Stack Them
+## Challenging the current wisdom
 
 The standard advice for small specialist models: **fine-tune for behavior, add RAG for knowledge, stack them.** Fine-tuning teaches the model *how* to act; retrieval keeps it *current*. Every reference architecture draws them as two layers of the same cake. The stronger version goes further: with a good retriever, why fine-tune at all?
 
-So I tried it. RAG on top of a LoRA-trained base model - and it performed **worse**. Not the same. Worse. Stacking actually makes it worse. Here is the scoreboard first, then what each row means:
+Turns out that RAG on top of a LoRA-trained base model performs **worse** than not using RaG at all. Here is the data to support this. 
 
 | Setup | well-formed JSON | right tool | exact arguments |
 | --- | --- | --- | --- |
@@ -30,13 +30,13 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 | C. base + LoRA | 91% | **77.5%** | 2.5% |
 | D. LoRA + RAG | 85.5% | **69.0%** | 1.5% |
 
-**How to read this table.** Each case gives the model a situation (the task, recent activity, the error) and asks for one tool call written in JSON, the strict format the harness requires. There are 200 held-out cases, never trained on and never retrieved from, and each case is answered under all four setups below - 800 answers in total.
+**How to read this table.** Each case gives the model a situation (the task, recent activity, the error) and asks for one tool call written in JSON, the strict format the harness requires. There are 200 cases, never trained on and never retrieved from, and each case is answered under all four setups below - 800 answers in total.
 
 **The columns:** "well-formed JSON" means the model answered in the required format at all. "Right tool" means it picked the same tool that actually fixed the problem. "Exact arguments" means it also got every argument character-perfect. That last bar is the strictest, and almost nothing clears it.
 
 **The rows:**
 
-- **A. base model.** The raw 1.5B model with no help. The null control.
+- **A. base model.** The raw 1.5B model with no help. The baseline.
 - **B. base + RAG.** The same base model, with the three most similar past fixes pasted into its context.
 - **C. base + LoRA.** The base model plus my trained adapter (rank 16, 74 MB).
 - **D. LoRA + RAG.** The trained model plus the pasted fixes. The full stack.
@@ -45,4 +45,6 @@ B and C were built from the same 2,159 training pairs on purpose: same knowledge
 
 ## Misleading intuition
 
-The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. **The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
+The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. 
+
+**The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
