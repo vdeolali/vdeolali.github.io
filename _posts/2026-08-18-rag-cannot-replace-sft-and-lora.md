@@ -30,16 +30,18 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 | C. base + LoRA | 91% | **77.5%** | 2.5% |
 | D. LoRA + RAG | 85.5% | **69.0%** | 1.5% |
 
-**What each row means.** Each case gives the model a situation (the task, recent activity, the error) and asks for one tool call written in JSON, the strict format the harness requires. There are 200 held-out cases, never trained on and never retrieved from. Each case is answered under all four setups below, 800 answers in total.
+**How to read this table.** Each case gives the model a situation (the task, recent activity, the error) and asks for one tool call written in JSON, the strict format the harness requires. There are 200 held-out cases, never trained on and never retrieved from, and each case is answered under all four setups below - 800 answers in total.
+
+**The columns:** "well-formed JSON" means the model answered in the required format at all. "Right tool" means it picked the same tool that actually fixed the problem. "Exact arguments" means it also got every argument character-perfect. That last bar is the strictest, and almost nothing clears it.
+
+**The rows:**
 
 - **A. base model.** The raw 1.5B model with no help. The null control.
 - **B. base + RAG.** The same base model, with the three most similar past fixes pasted into its context.
 - **C. base + LoRA.** The base model plus my trained adapter (rank 16, 74 MB).
 - **D. LoRA + RAG.** The trained model plus the pasted fixes. The full stack.
 
-B and C were built from the same 2,159 training pairs on purpose: same knowledge, two delivery channels. **What the columns mean.** "Well-formed JSON" means the model answered in the required format. "Right tool" means it picked the same tool that actually fixed the problem. "Exact arguments" means it also got every argument character-perfect. That last bar is the strictest, and almost nothing clears it.
-
-The corpus and harness are described in [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}).
+B and C were built from the same 2,159 training pairs on purpose: same knowledge, two delivery channels. The corpus and harness are described in [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}).
 ## Misleading intuition
 
 The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. **The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
