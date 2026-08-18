@@ -34,11 +34,11 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 
 ## The redundancy tax
 
-The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism. Every token in the prompt bends the output. The only question is whether a token buys more than it costs.
+The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism.
 
-Retrieval charges on every call. There is the literal bill first - three pasted examples riding on every prompt: more tokens, more latency, more money, every single call. And when the pasted knowledge is redundant - when the weights already hold it - you pay that bill for nothing. Worse than nothing: the examples still pull. Retrieval returns the most *similar* past cases, and similar-looking situations often call for different tools. The model bends toward the neighbors it can see, instead of the distinctions it was trained on.
+Why does the intuition feel so obviously true? Because that is how reading works for *you*. You skim a page, ignore the irrelevant parts, and zero in on the one line that matters - your attention is selective by default. We quietly assume the model reads the same way: paste in three examples, let it consult them, and if they are not useful it will simply not use them.
 
-The case file: pairing the 200 exams head-to-head, retrieval knocked out a correct trained answer **12 times** and rescued a wrong one **6 times**. One flip is almost too clean an exhibit: the situation called for running a command (`exec_command`); the trained model said so; the RAG-augmented model emitted a full `apply_patch` payload instead - a faithful imitation of one of its retrieved near-misses. The shots did not inform its decision. They outbid it.
+It cannot. A language model has no selective reading. Every token in the prompt goes through the whole network and gets a vote on every word of the answer - that is literally what attention means. There is no background shelf, no "for reference only" flag: pasted examples are not documents the model consults, they are the world it is currently speaking from. So they always bend the output toward the patterns they contain. When the information is new, that bend is the benefit - condition B gained sixty points from it. When the information is already in the weights, the benefit is zero and the bend still happens - condition D lost eight and a half. Paying for a bend you did not need, in tokens, in latency, and in answers pulled off target, is the redundancy tax.
 
 **The rule: retrieval pays when it tells the model something new. It taxes when it repeats something known.**
 
