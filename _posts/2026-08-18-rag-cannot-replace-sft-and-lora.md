@@ -34,8 +34,4 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 
 ## The redundancy tax
 
-The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism.
-
-**The rule: retrieval pays when it tells the model something new. It taxes when it repeats something known.**
-
-So: RAG cannot replace SFT and LoRA - measured, same data, same exam. And the reverse holds only with an asterisk: weights cannot absorb knowledge that did not exist at train time, which is the one seat retrieval keeps. Facts that change faster than you retrain go to retrieval; form goes to weights; and the improvement channel for a trained specialist is not more context and not more capacity - it is more data. The corpus is the moat. Everything else is plumbing.
+The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. **The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
