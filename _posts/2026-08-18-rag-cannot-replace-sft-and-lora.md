@@ -1,21 +1,21 @@
 ---
-title: "Retrieval and training are substitutes, not complements"
+title: "RAG cannot replace SFT and LoRA"
 date: 2026-08-18
 ---
 
-# Retrieval and training are substitutes, not complements
+# RAG cannot replace SFT and LoRA
 
-*The redundancy tax: I handed a trained model its own textbook during the exam, and it did worse. Below are the numbers, the mechanism, and the one job retrieval gets to keep.*
+*The redundancy tax: RAG gets worse with redundancy, and it adds to the cost of context too. Below are the numbers, the mechanism, and the one job retrieval gets to keep.*
 
 ---
 
 ## 0. TL;DR
 
-I took the same 2,159 error-recovery training pairs and delivered them to a 1.5B model two ways: baked into weights (LoRA) or pasted into the prompt (RAG). On a 200-case held-out exam: base model 1%, RAG 61.5%, LoRA 77.5% - and LoRA + RAG **69%**. Retrieval rescues a model that knows nothing, loses the head-to-head against training on identical knowledge, and *taxes* a trained model instead of helping it. The stack lost to both of its own layers.
+A claim making the rounds says retrieval makes fine-tuning optional: skip the training, just stuff the prompt. On my own error-recovery task, it does not hold. Same 2,159 training pairs delivered two ways - baked into weights (LoRA) or pasted into the prompt (RAG) - on a 200-case held-out exam: base model 1%, RAG 61.5%, LoRA 77.5%, and LoRA + RAG **69%**. Retrieval rescues a model that knows nothing, loses the head-to-head against training on identical knowledge, and *taxes* a trained model instead of helping it. RAG cannot replace SFT and LoRA - and stacking it on top of them made things worse, not better. Worse answers, on more context.
 
 ## 1. The folklore: stack them
 
-The standard advice for small specialist models: **fine-tune for behavior, add RAG for knowledge, stack them.** Fine-tuning teaches the model *how* to act; retrieval keeps it *current*. Every reference architecture draws them as two layers of the same cake. I believed this too, which is why I ran the four-condition experiment instead of just shipping the stack.
+The standard advice for small specialist models: **fine-tune for behavior, add RAG for knowledge, stack them.** Fine-tuning teaches the model *how* to act; retrieval keeps it *current*. Every reference architecture draws them as two layers of the same cake. The stronger version goes further: with a good retriever, why fine-tune at all? I believed the stacking version too, which is why I ran the four-condition experiment instead of just shipping the stack.
 
 ## 2. The setup: a fair fight
 
@@ -36,7 +36,7 @@ The exam: 200 held-out cases, never trained on, never retrieved from. Each shows
 
 **Retrieval rescues a model that knows nothing.** The base model writes perfectly parseable JSON and picks my tools at chance. Show it three similar past fixes in the prompt and tool accuracy jumps to 61.5% - sixty points of knowledge, zero training. RAG works.
 
-**Training beats retrieval on identical knowledge.** Same corpus in weights instead of context: 77.5% vs 61.5%, a sixteen-point win, with cleaner output to boot (91% valid vs 77%).
+**Training beats retrieval on identical knowledge.** Same corpus in weights instead of context: 77.5% vs 61.5%, a sixteen-point win, with cleaner output to boot (91% valid vs 77%). If RAG could replace fine-tuning, this is where it would have happened - same data, same exam, no GPU session required. It did not.
 
 **Stacking is worse than either alone.** I expected D to roughly equal C: the model already knows this material, so it should ignore the pasted examples and lose nothing. Instead it lost **8.5 points** of tool accuracy and six points of JSON validity. The redundant examples did not go unread. They did damage.
 
@@ -44,7 +44,7 @@ The exam: 200 held-out cases, never trained on, never retrieved from. Each shows
 
 The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism. Every token in the prompt bends the output. The only question is whether a token buys more than it costs.
 
-Retrieval charges the same cost on every call, in three currencies:
+Retrieval charges on every call. There is the literal bill first - three pasted examples riding on every prompt: more tokens, more latency, more money, every single call. And then there are three quality taxes:
 
 - **Attention on near-misses.** The retriever returns the *most similar* past cases, and similar-looking situations often call for different tools - that is why they are separate pairs in the corpus. The examples whisper "situations like this got tool Y" at exactly the cases that need tool X. The fine distinctions live in the weights; the retrieved neighbors smear them.
 - **Blending instead of arbitrating.** A frontier model can weigh the prompt against its training and referee the conflict. A 1.5B cannot arbitrate - it blends. Blending three near-misses with the right answer pulls the answer off target, hardest on the knife-edge cases where trained discrimination earns its keep.
@@ -67,4 +67,4 @@ Honest boundaries, because the headline is easy to over-read:
 
 **Retrieval pays when it tells the model something new. It taxes when it repeats something known.**
 
-Which collapses the stack-by-default architecture into a division of labor: facts that change faster than you retrain go to retrieval; form goes to weights; and the improvement channel for a trained specialist is not more context and not more capacity - it is more data. The corpus is the moat. Everything else is plumbing.
+So: RAG cannot replace SFT and LoRA - measured, same data, same exam. And the reverse holds only with an asterisk: weights cannot absorb knowledge that did not exist at train time, which is the one seat retrieval keeps. Everything else collapses into a division of labor: facts that change faster than you retrain go to retrieval; form goes to weights; and the improvement channel for a trained specialist is not more context and not more capacity - it is more data. The corpus is the moat. Everything else is plumbing.
