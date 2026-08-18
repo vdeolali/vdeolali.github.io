@@ -42,6 +42,7 @@ So I tried it. RAG on top of a LoRA-trained base model - and it performed **wors
 - **D. LoRA + RAG.** The trained model plus the pasted fixes. The full stack.
 
 B and C were built from the same 2,159 training pairs on purpose: same knowledge, two delivery channels. The corpus and harness are described in [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}).
+
 ## Misleading intuition
 
 The intuition that fails here is that extra information is helpful or neutral because the model can always ignore it - but an LLM cannot ignore its context; there is no skip mechanism. **The rule: retrieval pays when it tells the model something new, and it taxes when it repeats something known.**
