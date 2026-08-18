@@ -11,19 +11,17 @@ date: 2026-08-18
 
 ## 0. TL;DR
 
-A claim making the rounds says retrieval makes fine-tuning optional: skip the training, just stuff the prompt. On my own error-recovery task, it does not hold. Same 2,159 training pairs delivered two ways - baked into weights (LoRA) or pasted into the prompt (RAG) - on a 200-case held-out exam: base model 1%, RAG 61.5%, LoRA 77.5%, and LoRA + RAG **69%**. Retrieval rescues a model that knows nothing, loses the head-to-head against training on identical knowledge, and *taxes* a trained model instead of helping it. RAG cannot replace SFT and LoRA - and stacking it on top of them made things worse, not better. Worse answers, on more context.
+A claim making the rounds says retrieval makes fine-tuning optional: skip the training, just stuff the prompt. I tested it on my own error-recovery task - the same 2,159 training pairs delivered two ways (baked into weights vs pasted into the prompt), 200 held-out cases, one exam. Three findings:
 
-## 1. The folklore: stack them
+- **Retrieval rescues a model that knows nothing.** The base model picks my tools at chance (1%); three pasted fixes take it to 61.5%. Sixty points of knowledge, zero training. RAG works.
+- **Training beats retrieval on identical knowledge.** 77.5% vs 61.5% - sixteen points, with cleaner output to boot (91% vs 77% valid JSON). RAG cannot replace SFT and LoRA.
+- **Stacking is worse than either alone.** LoRA + RAG drops to 69%: the trained model loses 8.5 points of tool accuracy the moment retrieval is added. Worse answers, on more context. The redundancy tax is real.
 
-The standard advice for small specialist models: **fine-tune for behavior, add RAG for knowledge, stack them.** Fine-tuning teaches the model *how* to act; retrieval keeps it *current*. Every reference architecture draws them as two layers of the same cake. The stronger version goes further: with a good retriever, why fine-tune at all? I believed the stacking version too, which is why I ran the four-condition experiment instead of just shipping the stack.
+## 1. Reigning Wisdom: Stack Them
 
-## 2. The setup: a fair fight
+The standard advice for small specialist models: **fine-tune for behavior, add RAG for knowledge, stack them.** Fine-tuning teaches the model *how* to act; retrieval keeps it *current*. Every reference architecture draws them as two layers of the same cake. The stronger version goes further: with a good retriever, why fine-tune at all?
 
-The task is my own error-recovery idiom - the same corpus, harness, and specialist model described in [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}). The LoRA adapter (rank 16, 74 MB) and the RAG index were built from the **identical** 2,159 pairs. That is deliberate: same knowledge, two delivery channels, no excuses about who had better data.
-
-The exam: 200 held-out cases, never trained on, never retrieved from. Each shows the model a situation (task, recent activity, the error) and demands one tool call as JSON. Three scores, strictest last: **valid JSON** (does it speak the contract), **right tool** (does it know the fix), **exact arguments** (a deliberately brutal bar - many phrasings are equally correct). Greedy decoding, so every number here is reproducible digit-for-digit. Per-condition noise is about +/-3.5 points at n=200.
-
-## 3. The scoreboard
+So I tried it. RAG on top of a LoRA-trained base model - and it performed **worse**. Not the same. Worse. Stacking actually makes it worse. Here is the scoreboard first, then what each row means:
 
 | Condition | valid JSON | right tool | exact args |
 | --- | --- | --- | --- |
@@ -32,15 +30,9 @@ The exam: 200 held-out cases, never trained on, never retrieved from. Each shows
 | C. base + LoRA | 91% | **77.5%** | 2.5% |
 | D. LoRA + RAG | 85.5% | **69.0%** | 1.5% |
 
-## 4. Three findings
+**The rows.** The task is my own error-recovery idiom, the corpus and harness from [The $50 Specialist]({% post_url 2026-08-05-the-50-specialist %}): given a situation (task, recent activity, the error), emit one tool call as JSON. 200 held-out cases, never trained on, never retrieved from. **A** is the raw 1.5B base model with no help - the null control. **B** is the same base model with the three most similar past fixes (from the 2,159-pair corpus) pasted into its prompt. **C** is the base model plus the LoRA adapter (rank 16, 74 MB) trained on those same 2,159 pairs. **D** is the stack: the trained model *and* the retrieved examples. B and C see the identical corpus on purpose - same knowledge, two delivery channels, no excuses about who had better data. The columns run strictest left to right: valid JSON (speaks the contract), right tool (knows the fix), exact arguments (a deliberately brutal bar - many phrasings are equally correct). Greedy decoding, so every number is reproducible digit-for-digit; per-condition noise is about +/-3.5 points at n=200.
 
-**Retrieval rescues a model that knows nothing.** The base model writes perfectly parseable JSON and picks my tools at chance. Show it three similar past fixes in the prompt and tool accuracy jumps to 61.5% - sixty points of knowledge, zero training. RAG works.
-
-**Training beats retrieval on identical knowledge.** Same corpus in weights instead of context: 77.5% vs 61.5%, a sixteen-point win, with cleaner output to boot (91% valid vs 77%). If RAG could replace fine-tuning, this is where it would have happened - same data, same exam, no GPU session required. It did not.
-
-**Stacking is worse than either alone.** I expected D to roughly equal C: the model already knows this material, so it should ignore the pasted examples and lose nothing. Instead it lost **8.5 points** of tool accuracy and six points of JSON validity. The redundant examples did not go unread. They did damage.
-
-## 5. The redundancy tax
+## 2. The redundancy tax
 
 The intuition that fails here: extra information is helpful or neutral, because the model can always ignore it. An LLM cannot ignore its context - there is no skip mechanism. Every token in the prompt bends the output. The only question is whether a token buys more than it costs.
 
@@ -54,7 +46,7 @@ Same tax every call. When the information is new (condition B), the benefit dwar
 
 The case file: pairing the 200 exams head-to-head, retrieval knocked out a correct trained answer **12 times** and rescued a wrong one **6 times**. One flip is almost too clean an exhibit: the situation called for running a command (`exec_command`); the trained model said so; the RAG-augmented model emitted a full `apply_patch` payload instead - a faithful imitation of one of its retrieved near-misses. The shots did not inform its decision. They outbid it.
 
-## 6. What this does not kill
+## 3. What this does not kill
 
 Honest boundaries, because the headline is easy to over-read:
 
@@ -63,7 +55,7 @@ Honest boundaries, because the headline is easy to over-read:
 - **Retrieval-aware training exists** - train on retrieval-shaped prompts and the tax presumably shrinks. But that spends training budget to accommodate a sensor, which inverts the economics that made retrieval attractive.
 - **n=200, one task family, one retriever, K=3.** The effect clears the error bars and the mechanism is visible in the raw outputs, but generality is earned one replication at a time.
 
-## 7. The rule
+## 4. The rule
 
 **Retrieval pays when it tells the model something new. It taxes when it repeats something known.**
 
