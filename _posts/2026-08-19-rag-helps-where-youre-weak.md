@@ -5,23 +5,21 @@ date: 2026-08-19
 
 # RAG helps where you're weak, taxes where you're strong
 
-*Yesterday's post showed that adding RAG to a trained small model makes it worse overall. Today: a closer look at where exactly it hurts - and where it quietly helps.*
+*This [post](https://vdeolali.github.io/2026/08/18/rag-cannot-replace-sft-and-lora.html) showed that adding RAG to a trained small model makes it worse overall. Today: a closer look at where exactly it hurts - and where it quietly helps.*
 
 ---
 
 ## TL;DR
 
-[Yesterday's experiment]({% post_url 2026-08-18-rag-cannot-replace-sft-and-lora %}) ended with a clean result: adding retrieval to my trained 1.5B model cost 8.5 points of accuracy. New breakdown, same data: the tax is not uniform. It depends on the error category.
+[Yesterday's experiment]({% post_url 2026-08-18-rag-cannot-replace-sft-and-lora %}) ended with a clean result: adding retrieval to my trained 1.5B model cost 8.5 points of accuracy. This hit on accuracy comes from where? Let's explore in this post. 
 
 - **Where the model is strong, RAG taxes it.** In cloud-auth and JSON categories (89% trained accuracy), adding retrieval dropped accuracy to 67%.
 - **Where the model is weak, RAG helps.** In package/environment errors (43% trained), retrieval lifted accuracy to 71%.
-- **A router beats both.** Send weak categories to retrieval, keep strong ones trained-only: about 79.6% versus 77.5% trained-only. Free points, no retraining.
+- **A scheduler beats both.** Send weak categories to retrieval, keep strong ones trained-only: about 79.6% versus 77.5% trained-only. Free points, no retraining.
 
-## The question
+## The question: Is the tax progressive or flat? 
 
-Yesterday's exam: 200 held-out error-recovery cases. The trained model scored 77.5%. The trained model plus RAG scored 69%. Stacking hurts, on average.
-
-But an average hides a lot. The 200 cases are not one kind of problem - they span ssh failures, git errors, missing files, network timeouts, and more. So the next question: is the tax the same everywhere?
+Yesterday's results were based on 200 error recovery cases from my history of using AI tools. The trained model scored 77.5%. The trained model plus RAG scored 69%. This shows the crack in the best practice which calls for stacking. The 200 cases are not one kind of problem - they span ssh failures, git errors, missing files, network timeouts, and more. So the next question: is the tax the same everywhere?
 
 ## The map
 
@@ -49,15 +47,15 @@ The more the model already knows a category, the more retrieval hurts it:
 - **One tie.** ssh/auth stayed flat at 73%, knockouts and rescues canceling out.
 - **One exception.** git was weak (50%) and still got taxed hardest - but with 4 cases, that is one flipped answer. Direction, not gospel.
 
-So yesterday's rule gets a boundary condition: **retrieval pays where knowledge is missing, and taxes where knowledge is trained in** - not as a global law, but category by category.
+So yesterday's rule gets a boundary condition: **retrieval pays where knowledge is missing, and taxes where knowledge is trained in** - not as a global law, but category by category. In other words, taxes are very progressive, they hurt when you already know and help when you lack the basics. 
 
-## The practical fix: route it
+## The practical fix: smart scheduler
 
 If the tax is per-category, the fix is per-category too. Classify the error first (my corpus already has a cheap regex classifier), then decide: strong category - answer from the trained model alone; weak category - add retrieval.
 
 On yesterday's numbers, that router scores about **79.6%**, versus 77.5% trained-only and 69% stack-everything. Not a leap, but free: no retraining, no new data. And the gains land exactly where the model is weakest, which is where mistakes are most expensive.
 
-## Why does the tax happen? Open question.
+## Why even tax? Open question.
 
 Three hypotheses, none proven yet:
 
